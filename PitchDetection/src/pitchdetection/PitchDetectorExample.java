@@ -10,45 +10,34 @@ package pitchdetection;
  * @author Chachi.Desuasido
  */
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Random;
 
-import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
+
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.TargetDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
+import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
-
+import be.tarsos.dsp.SilenceDetector;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
+
 import javax.swing.JTextField;
 
-public class PitchDetectorExample extends JFrame implements PitchDetectionHandler {
+
+public class PitchDetectorExample extends JFrame implements PitchDetectionHandler  {
 	final int PIPE_WIDTH = 29;
 	final int PIPE_HEIGHT = 500;
 	final int PIPE_OPENING = 250;
@@ -58,6 +47,9 @@ public class PitchDetectorExample extends JFrame implements PitchDetectionHandle
 	JLabel bg = new JLabel();
 	JLabel pipeB = new JLabel();
 	JLabel pipeT = new JLabel();
+       	SilenceDetector silenceDetector;
+        double threshold;
+    
 
 	/**
 	 *
@@ -114,6 +106,7 @@ public class PitchDetectorExample extends JFrame implements PitchDetectionHandle
 		pipeT.setLocation((int) pipeX, (int) -pipeY);
 		pipeB.setLocation((int) pipeX, (int) (600.f - pipeY));
 	}
+	
 	
 	public PitchDetectorExample() {
 		super("pitch");
@@ -218,6 +211,9 @@ public class PitchDetectorExample extends JFrame implements PitchDetectionHandle
 
 		// add a processor
 		dispatcher.addAudioProcessor(new PitchProcessor(algo, sampleRate, bufferSize, this));
+                silenceDetector = new SilenceDetector(threshold,false);
+		dispatcher.addAudioProcessor(silenceDetector);
+		
 
 		new Thread(dispatcher, "Audio dispatching").start();
 	}
@@ -226,8 +222,9 @@ public class PitchDetectorExample extends JFrame implements PitchDetectionHandle
 		JFrame frame = new PitchDetectorExample();
 		frame.setSize(338, 600);
 		frame.setVisible(true);
+                SoundDetector s=new SoundDetector();
 	}
-
+     
 	@Override
 	public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
 		if (pitchDetectionResult.getPitch() == -1.f) return;
@@ -243,4 +240,20 @@ public class PitchDetectorExample extends JFrame implements PitchDetectionHandle
 			jump();
 		}
 	}
-}
+        
+      public void handleSound(){
+     
+          threshold=-120;
+          System.out.println((int)silenceDetector.currentSPL());
+		if(silenceDetector.currentSPL() > threshold){
+			
+                    jump();
+                }
+              
+	}
+    
+    
+       
+			
+	}
+
